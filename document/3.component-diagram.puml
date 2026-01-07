@@ -1,0 +1,58 @@
+@startuml VetConsultationSystem
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+title 수의사 온라인 상담 플랫폼 - 컴포넌트 다이어그램
+
+actor "반려동물 보호자\n(Web/Mobile)" as User
+actor "수의사\n(Web/Mobile)" as Vet
+actor "관리자\n(Web/Mobile)" as Admin
+
+package "Frontend" {
+[Web Client]
+[Mobile Client]
+}
+
+package "Backend Services" {
+component "API Gateway\n(Spring Boot)" as API
+component "Auth Service\n(JWT)" as Auth
+component "Consultation Service" as Consult
+component "Matching Service" as Match
+component "Notification Service\n(WebSocket/SSE)" as Notify
+component "Report Service" as Report
+}
+
+package "Infrastructure" {
+database "MySQL" as MySQL
+database "Redis Cache" as Redis
+queue "Kafka Broker" as Kafka
+}
+
+User --> [Web Client]
+User --> [Mobile Client]
+Vet --> [Web Client]
+Vet --> [Mobile Client]
+Admin --> [Web Client]
+
+[Web Client] --> API
+[Mobile Client] --> API
+
+API --> Auth
+API --> Consult
+API --> Match
+API --> Notify
+API --> Report
+
+Consult --> MySQL
+Match --> MySQL
+Report --> MySQL
+
+Consult --> Redis
+Match --> Redis
+
+Consult --> Kafka
+Notify --> Kafka
+Report --> Kafka
+
+@enduml
