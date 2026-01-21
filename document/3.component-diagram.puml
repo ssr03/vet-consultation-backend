@@ -5,54 +5,52 @@ skinparam shadowing false
 
 title 수의사 온라인 상담 플랫폼 - 컴포넌트 다이어그램
 
-actor "반려동물 보호자\n(Web/Mobile)" as User
-actor "수의사\n(Web/Mobile)" as Vet
-actor "관리자\n(Web/Mobile)" as Admin
+actor "반려동물 보호자" as User
+actor "수의사" as Vet
+actor "관리자" as Admin
 
-package "Frontend" {
-[Web Client]
-[Mobile Client]
+package "Client" {
+  component "Web Client" as Web
 }
 
 package "Backend Services" {
-component "API Gateway\n(Spring Boot)" as API
-component "Auth Service\n(JWT)" as Auth
-component "Consultation Service" as Consult
-component "Matching Service" as Match
-component "Notification Service\n(WebSocket/SSE)" as Notify
-component "Report Service" as Report
+  component "Auth Module\n(JWT)" as Auth
+  component "Consultation Module(상태 관리)" as Consult
+  component "Matching Module" as Match
+  component "Chat Module\n(WebSocket)" as Chat
+  component "Report Module" as Report
 }
 
 package "Infrastructure" {
-database "MySQL" as MySQL
-database "Redis Cache" as Redis
-queue "Kafka Broker" as Kafka
+  database "MySQL" as MySQL
+  database "Redis" as Redis
+  queue "Kafka\n(Event Stream)" as Kafka
 }
 
-User --> [Web Client]
-User --> [Mobile Client]
-Vet --> [Web Client]
-Vet --> [Mobile Client]
-Admin --> [Web Client]
+' ===== Client → Backend =====
+User --> Web
+Vet --> Web
+Admin --> Web
 
-[Web Client] --> API
-[Mobile Client] --> API
+Web --> Auth
+Web --> Consult
+Web --> Chat
 
-API --> Auth
-API --> Consult
-API --> Match
-API --> Notify
-API --> Report
-
+' ===== Database =====
+Auth --> MySQL
 Consult --> MySQL
 Match --> MySQL
 Report --> MySQL
 
-Consult --> Redis
-Match --> Redis
+' ===== Redis (state / lock / cache) =====
+Consult --> Redis : 상담 상태 캐시
+Match --> Redis : 매칭 락 / 수의사 접속 상태
 
-Consult --> Kafka
-Notify --> Kafka
-Report --> Kafka
+' ===== Kafka (event only) =====
+Chat --> Kafka : 채팅 메시지 이벤트
+Consult --> Kafka : 상담 상태 변경 이벤트
+Report --> Kafka : 리포트 생성 이벤트
 
+Kafka --> Chat
+Kafka --> Report
 @enduml
